@@ -50,3 +50,8 @@ The filter function takes the JSON array and the filter array and will return th
 ```typescript
 export declare function filter(data: Array<unknown>, filterExpression: Array<expressionFilter | expressionConnector | expressionGroup>): Array<unknown>;
 ```
+
+If you don't pass a "expressionConnector" between each "expressionFilter", they will automatically be connect with AND logic.
+
+
+And always remember: shit in, shit out :)
