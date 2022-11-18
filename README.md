@@ -32,7 +32,7 @@ That's it. Just put your JSON array and the filter array into the filter functio
 The filter function takes a JSON array and a filter array and will return the filtered result:
 
 ```typescript
-function filter(data: Array<jsonLikeObject>, filterExpression: Array<expressionFilter | expressionConnector | expressionGroup>): Array<jsonLikeObject>;
+function filter(data: Array<jsonLikeObject>, filterExpression: Array<expressionFilter | expressionConnector | expressionGroup>);
 ```
 
 The JSON array must contain JSON like data:
