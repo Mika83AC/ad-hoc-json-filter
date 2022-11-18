@@ -29,6 +29,12 @@ Build an array like this:
 That's it. Just put your JSON array and the filter array into the filter function and be happy.
 
 ## The details!
+The filter function takes a JSON array and a filter array and will return the filtered result:
+
+```typescript
+function filter(data: Array<jsonLikeObject>, filterExpression: Array<expressionFilter | expressionConnector | expressionGroup>): Array<jsonLikeObject>;
+```
+
 The JSON array must contain JSON like data:
 ```typescript
 export type jsonLikeObject = {
@@ -50,12 +56,6 @@ type expressionConnector = {
 type expressionGroup = {
     grp: "(" | ")"; // Opening or closing a group
 };
-```
-
-The filter function takes the JSON array and the filter array and will return the filtered result:
-
-```typescript
-function filter(data: Array<jsonLikeObject>, filterExpression: Array<expressionFilter | expressionConnector | expressionGroup>): Array<jsonLikeObject>;
 ```
 
 If you don't pass a "expressionConnector" between each "expressionFilter", they will automatically be connect with AND logic.
