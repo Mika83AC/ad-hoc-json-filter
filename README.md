@@ -29,13 +29,20 @@ Build an array like this:
 That's it. Just put your JSON array and the filter array into the filter function and be happy.
 
 ## The details!
+The JSON array must contain JSON like data:
+```typescript
+export type jsonLikeObject = {
+   [key: string]: string | number | boolean | Array<jsonLikeObject> | null
+}
+```
+
 The filter array can contain three different types of filter expressions:
 
 ```typescript
 type expressionFilter = {
     key: string; // The property name to filter
     op: "=" | "!=" | "<" | "<=" | ">" | ">=" | "cont"; // The comarison operation to perform
-    val: string | number | Date | boolean | null | undefined; // The value to compare with
+    val: string | number | boolean | null; // The value to compare with
 };
 type expressionConnector = {
     con: "&&" | "||"; // AND / OR connection
@@ -48,7 +55,7 @@ type expressionGroup = {
 The filter function takes the JSON array and the filter array and will return the filtered result:
 
 ```typescript
-function filter(data: Array<unknown>, filterExpression: Array<expressionFilter | expressionConnector | expressionGroup>): Array<unknown>;
+function filter(data: Array<jsonLikeObject>, filterExpression: Array<expressionFilter | expressionConnector | expressionGroup>): Array<jsonLikeObject>;
 ```
 
 If you don't pass a "expressionConnector" between each "expressionFilter", they will automatically be connect with AND logic.
