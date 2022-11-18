@@ -35,7 +35,7 @@ The filter function takes a JSON array and a filter array and will return the fi
 function filter(json: Array<jsonLikeObject>, filterExpressions: Array<expressionFilter | expressionConnector | expressionGroup>);
 ```
 
-The 'json' parameter must be a array with JSON objects in it':
+The 'json' parameter must be a array with JSON objects':
 ```typescript
 type jsonLikeObject = {
    [key: string]: string | number | boolean | Array<jsonLikeObject> | null
