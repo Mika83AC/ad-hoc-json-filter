@@ -1,16 +1,19 @@
 import { t } from 'typy';
 
-export function filter(data: Array<jsonLikeObject>, filterExpression: Array<expressionFilter | expressionConnector | expressionGroup>): Array<jsonLikeObject> {
-   return data.filter(dataEntry => evaluateDataEntry(dataEntry, filterExpression));
+export function filter(json: Array<jsonLikeObject>, filterExpressions: Array<expressionFilter | expressionConnector | expressionGroup>): Array<jsonLikeObject> {
+   if (!Array.isArray(json))
+      return [];
+
+   return json.filter(jsonEntry => evaluateDataEntry(jsonEntry, filterExpressions));
 }
 
-function evaluateDataEntry(dataEntry: jsonLikeObject, filterExpression: Array<expressionFilter | expressionConnector | expressionGroup>): boolean {
+function evaluateDataEntry(jsonEntry: jsonLikeObject, filterExpressions: Array<expressionFilter | expressionConnector | expressionGroup>): boolean {
    let evalExpression = "";
 
-   if (!dataEntry)
+   if (!jsonEntry || typeof jsonEntry !== "object")
       return false;
 
-   for (const expression of filterExpression) {
+   for (const expression of filterExpressions) {
 
       if (!expression)
          continue;
@@ -31,7 +34,7 @@ function evaluateDataEntry(dataEntry: jsonLikeObject, filterExpression: Array<ex
 
          const filter = (expression as expressionFilter);
          const filterValue = filter.val;
-         const dataValue = t(dataEntry, filter.key).safeObject;
+         const dataValue = t(jsonEntry, filter.key).safeObject;
 
          if (filter.op === "=")
             evalExpression += dataValue === filterValue ? "1" : "0";

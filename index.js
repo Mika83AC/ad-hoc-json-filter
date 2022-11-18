@@ -2,16 +2,18 @@
 exports.__esModule = true;
 exports.filter = void 0;
 var typy_1 = require("typy");
-function filter(data, filterExpression) {
-    return data.filter(function (dataEntry) { return evaluateDataEntry(dataEntry, filterExpression); });
+function filter(json, filterExpressions) {
+    if (!Array.isArray(json))
+        return [];
+    return json.filter(function (jsonEntry) { return evaluateDataEntry(jsonEntry, filterExpressions); });
 }
 exports.filter = filter;
-function evaluateDataEntry(dataEntry, filterExpression) {
+function evaluateDataEntry(jsonEntry, filterExpressions) {
     var evalExpression = "";
-    if (!dataEntry)
+    if (!jsonEntry || typeof jsonEntry !== "object")
         return false;
-    for (var _i = 0, filterExpression_1 = filterExpression; _i < filterExpression_1.length; _i++) {
-        var expression = filterExpression_1[_i];
+    for (var _i = 0, filterExpressions_1 = filterExpressions; _i < filterExpressions_1.length; _i++) {
+        var expression = filterExpressions_1[_i];
         if (!expression)
             continue;
         if (expression.grp !== undefined && expression.grp === "(")
@@ -25,7 +27,7 @@ function evaluateDataEntry(dataEntry, filterExpression) {
         else if (expression.key !== undefined && expression.key.length > 0) {
             var filter_1 = expression;
             var filterValue = filter_1.val;
-            var dataValue = (0, typy_1.t)(dataEntry, filter_1.key).safeObject;
+            var dataValue = (0, typy_1.t)(jsonEntry, filter_1.key).safeObject;
             if (filter_1.op === "=")
                 evalExpression += dataValue === filterValue ? "1" : "0";
             else if (filter_1.op === "!=")

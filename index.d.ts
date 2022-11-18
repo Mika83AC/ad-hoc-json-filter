@@ -1,4 +1,4 @@
-export declare function filter(data: Array<jsonLikeObject>, filterExpression: Array<expressionFilter | expressionConnector | expressionGroup>): Array<unknown>;
+export declare function filter(json: Array<jsonLikeObject>, filterExpressions: Array<expressionFilter | expressionConnector | expressionGroup>): Array<jsonLikeObject>;
 export type expressionFilter = {
     key: string;
     op: "=" | "!=" | "<" | "<=" | ">" | ">=" | "cont";
@@ -11,5 +11,5 @@ export type expressionGroup = {
     grp: "(" | ")";
 };
 export type jsonLikeObject = {
-    [key: string]: string | number | boolean | Array<unknown> | null;
+    [key: string]: string | number | boolean | Array<jsonLikeObject> | null;
 };
