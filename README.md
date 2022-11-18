@@ -37,7 +37,7 @@ function filter(data: Array<jsonLikeObject>, filterExpression: Array<expressionF
 
 The JSON array must contain JSON like data:
 ```typescript
-export type jsonLikeObject = {
+type jsonLikeObject = {
    [key: string]: string | number | boolean | Array<jsonLikeObject> | null
 }
 ```
