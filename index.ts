@@ -1,10 +1,10 @@
 import { t } from 'typy';
 
-export function filter(data: Array<unknown>, filterExpression: Array<expressionFilter | expressionConnector | expressionGroup>): Array<unknown> {
+export function filter(data: Array<jsonLikeObject>, filterExpression: Array<expressionFilter | expressionConnector | expressionGroup>): Array<jsonLikeObject> {
    return data.filter(dataEntry => evaluateDataEntry(dataEntry, filterExpression));
 }
 
-function evaluateDataEntry(dataEntry: unknown, filterExpression: Array<expressionFilter | expressionConnector | expressionGroup>): boolean {
+function evaluateDataEntry(dataEntry: jsonLikeObject, filterExpression: Array<expressionFilter | expressionConnector | expressionGroup>): boolean {
    let evalExpression = "";
 
    if (!dataEntry)
@@ -80,11 +80,15 @@ function evaluateDataEntry(dataEntry: unknown, filterExpression: Array<expressio
 export type expressionFilter = {
    key: string,
    op: "=" | "!=" | "<" | "<=" | ">" | ">=" | "cont",
-   val: string | number | Date | boolean | null
+   val: string | number | boolean | null
 }
 export type expressionConnector = {
    con: "&&" | "||"
 }
 export type expressionGroup = {
    grp: "(" | ")"
+}
+
+export type jsonLikeObject = {
+   [key: string]: string | number | boolean | Array<jsonLikeObject> | null
 }
