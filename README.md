@@ -1,8 +1,4 @@
 # ad-hoc-json-filter
-
-[![NPM Version][npm-image]][npm-url]
-[![NPM Downloads][downloads-image]][downloads-url]
-
 Filtering JSON data with variable filter conditions at runtime.
 
 ```sh
