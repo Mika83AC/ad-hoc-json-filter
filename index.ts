@@ -80,7 +80,7 @@ function evaluateDataEntry(dataEntry: unknown, filterExpression: Array<expressio
 export type expressionFilter = {
    key: string,
    op: "=" | "!=" | "<" | "<=" | ">" | ">=" | "cont",
-   val: string | number | Date | boolean | null | undefined
+   val: string | number | Date | boolean | null
 }
 export type expressionConnector = {
    con: "&&" | "||"

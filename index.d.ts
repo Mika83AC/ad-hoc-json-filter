@@ -2,7 +2,7 @@ export declare function filter(data: Array<unknown>, filterExpression: Array<exp
 export type expressionFilter = {
     key: string;
     op: "=" | "!=" | "<" | "<=" | ">" | ">=" | "cont";
-    val: string | number | Date | boolean | null | undefined;
+    val: string | number | Date | boolean | null;
 };
 export type expressionConnector = {
     con: "&&" | "||";
