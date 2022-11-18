@@ -1,5 +1,5 @@
 {
-  "name": "json-filter",
+  "name": "ad-hoc-json-filter",
   "version": "1.0.0",
   "description": "Dynamic filtering for JSON data",
   "main": "index.js",

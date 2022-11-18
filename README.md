@@ -1,5 +1,7 @@
 # ad-hoc-json-filter
-Filtering JSON data with variable filter conditions at runtime
+Filtering JSON data with variable filter conditions at runtime.
+
+`npm install ad-hoc-json-filter`
 
 ## Why?
 Filtering JSON in JS is simple. At least when you know the filter conditions at dev time. 
