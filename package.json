@@ -1,0 +1,19 @@
+{
+  "name": "json-filter",
+  "version": "1.0.0",
+  "description": "Dynamic filtering for JSON data",
+  "main": "index.js",
+  "scripts": {
+    "tsc": "tsc",
+    "test": "test"
+  },
+  "author": "Michael Hilgers",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^18.11.9",
+    "typescript": "^4.9.3"
+  },
+  "dependencies": {
+    "typy": "^3.3.0"
+  }
+}
