@@ -9,6 +9,7 @@ function filter(json, filterExpressions) {
 }
 exports.filter = filter;
 function evaluateDataEntry(jsonEntry, filterExpressions) {
+    var _a;
     var evalExpression = "";
     if (!jsonEntry || typeof jsonEntry !== "object")
         return false;
@@ -16,15 +17,22 @@ function evaluateDataEntry(jsonEntry, filterExpressions) {
         var expression = filterExpressions_1[_i];
         if (!expression)
             continue;
-        if (expression.grp !== undefined && expression.grp === "(")
+        if (expression.grp !== undefined && expression.grp === "(") {
+            // Esnure previous evalExpression is a connector 
+            if (evalExpression.length > 0 && (!evalExpression.endsWith('&') && !evalExpression.endsWith('|')))
+                evalExpression += "&&";
             evalExpression += "(";
+        }
         else if (expression.grp !== undefined && expression.grp === ")")
             evalExpression += ")";
-        else if (expression.con !== undefined && expression.con === "&&")
+        else if ((expression.con !== undefined && expression.con === "&&"))
             evalExpression += "&&";
         else if (expression.con !== undefined && expression.con === "||")
             evalExpression += "||";
         else if (expression.key !== undefined && expression.key.length > 0) {
+            // Esnure previous evalExpression is a connector or a group open
+            if (evalExpression.length > 0 && (!evalExpression.endsWith('&') && !evalExpression.endsWith('|') && !evalExpression.endsWith('(')))
+                evalExpression += "&&";
             var filter_1 = expression;
             var filterValue = filter_1.val;
             var dataValue = (0, typy_1.t)(jsonEntry, filter_1.key).safeObject;
@@ -32,13 +40,13 @@ function evaluateDataEntry(jsonEntry, filterExpressions) {
                 evalExpression += dataValue === filterValue ? "1" : "0";
             else if (filter_1.op === "!=")
                 evalExpression += dataValue !== filterValue ? "1" : "0";
-            else if (filter_1.op === ">")
+            else if (filter_1.op === ">" && filterValue)
                 evalExpression += dataValue > filterValue ? "1" : "0";
-            else if (filter_1.op === ">=")
+            else if (filter_1.op === ">=" && filterValue)
                 evalExpression += dataValue >= filterValue ? "1" : "0";
-            else if (filter_1.op === "<")
+            else if (filter_1.op === "<" && filterValue)
                 evalExpression += dataValue < filterValue ? "1" : "0";
-            else if (filter_1.op === "<=")
+            else if (filter_1.op === "<=" && filterValue)
                 evalExpression += dataValue <= filterValue ? "1" : "0";
             else if (filter_1.op === "cont" && Array.isArray(filterValue))
                 evalExpression += dataValue.indexOf(filterValue) >= 0 ? "1" : "0";
@@ -47,12 +55,12 @@ function evaluateDataEntry(jsonEntry, filterExpressions) {
         }
     }
     // Now evaluate the final expression
-    var expressionIsSafe = evalExpression.match(/[01&|()]*/ig);
+    var expressionIsSafe = evalExpression.match(/[0&|()1]*/ig);
     if (!expressionIsSafe)
         return false;
     var result = false;
     try {
-        result = eval(expressionIsSafe[0]);
+        result = eval((_a = expressionIsSafe[0]) !== null && _a !== void 0 ? _a : '0');
     }
     catch (error) {
         console.error(error);

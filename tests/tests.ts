@@ -1,7 +1,7 @@
 import { expressionConnector, expressionFilter, expressionGroup, filter } from ".."
 import * as fs from 'fs';
 
-const testData = JSON.parse(fs.readFileSync('./tests/testData.json', 'utf8'));
+const testDataOrig: Array<unknown> = JSON.parse(fs.readFileSync('./tests/testData.json', 'utf8'));
 let success = true;
 
 function test(testData: any, filterData: Array<expressionFilter | expressionConnector | expressionGroup>, checkFunc: any) {
@@ -24,6 +24,8 @@ function test(testData: any, filterData: Array<expressionFilter | expressionConn
    }]);
 }
 
+const testData = testDataOrig.slice(0);
+
 // Testing single comparison operations
 test(testData, [{ key: "firstName", op: "=", val: "Ingrid" }], ((x: any) => x.firstName === "Ingrid"));
 test(testData, [{ key: "isActive", op: "!=", val: false }], ((x: any) => x.isActive !== false));
@@ -43,7 +45,7 @@ test(testData, [{ key: "firstName", op: "=", val: "Ingrid" }, { con: "||" }, { k
 test(testData, [{ key: "premium", op: "!=", val: null }, { con: "&&" }, { key: "isActive", op: "=", val: true }], ((x: any) => x.premium !== null && x.isActive === true));
 
 // Testing groups
-test(testData, [{ key: "age", op: ">", val: 15 }, { con: "&&" }, { grp: "(" }, { key: "firstName", op: "=", val: "Ingrid" }, { con: "||" }, { key: "firstName", op: "=", val: "Justus" }, { grp: ")" }], ((x: any) => x.age > 15 && (x.firstName === "Ingrid" || x.firstName === "Justus")));
+test(testData, [{ key: "age", op: ">", val: 15 }, { grp: "(" }, { key: "firstName", op: "=", val: "Ingrid" }, { con: "||" }, { key: "firstName", op: "=", val: "Justus" }, { grp: ")" }], ((x: any) => x.age > 15 && (x.firstName === "Ingrid" || x.firstName === "Justus")));
 
 console.log("");
 

@@ -2,7 +2,7 @@
 exports.__esModule = true;
 var __1 = require("..");
 var fs = require("fs");
-var testData = JSON.parse(fs.readFileSync('./tests/testData.json', 'utf8'));
+var testDataOrig = JSON.parse(fs.readFileSync('./tests/testData.json', 'utf8'));
 var success = true;
 function test(testData, filterData, checkFunc) {
     var date1 = new Date();
@@ -19,6 +19,7 @@ function test(testData, filterData, checkFunc) {
             expression: JSON.stringify(filterData)
         }]);
 }
+var testData = testDataOrig.slice(0);
 // Testing single comparison operations
 test(testData, [{ key: "firstName", op: "=", val: "Ingrid" }], (function (x) { return x.firstName === "Ingrid"; }));
 test(testData, [{ key: "isActive", op: "!=", val: false }], (function (x) { return x.isActive !== false; }));
@@ -36,7 +37,7 @@ test(testData, [{ key: "firstName", op: "=", val: "Ingrid" }, { con: "&&" }, { k
 test(testData, [{ key: "firstName", op: "=", val: "Ingrid" }, { con: "||" }, { key: "firstName", op: "=", val: "Justus" }], (function (x) { return x.firstName === "Ingrid" || x.firstName === "Justus"; }));
 test(testData, [{ key: "premium", op: "!=", val: null }, { con: "&&" }, { key: "isActive", op: "=", val: true }], (function (x) { return x.premium !== null && x.isActive === true; }));
 // Testing groups
-test(testData, [{ key: "age", op: ">", val: 15 }, { con: "&&" }, { grp: "(" }, { key: "firstName", op: "=", val: "Ingrid" }, { con: "||" }, { key: "firstName", op: "=", val: "Justus" }, { grp: ")" }], (function (x) { return x.age > 15 && (x.firstName === "Ingrid" || x.firstName === "Justus"); }));
+test(testData, [{ key: "age", op: ">", val: 15 }, { grp: "(" }, { key: "firstName", op: "=", val: "Ingrid" }, { con: "||" }, { key: "firstName", op: "=", val: "Justus" }, { grp: ")" }], (function (x) { return x.age > 15 && (x.firstName === "Ingrid" || x.firstName === "Justus"); }));
 console.log("");
 if (success)
     console.log("✅ All test good!");
