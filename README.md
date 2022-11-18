@@ -9,7 +9,7 @@ But when it comes to runtime (for example if you offered variable filter inputs 
 That's the point this library is intended for.
 
 ## How?
-Build a array like this:
+Build an array like this:
 
 ```javascript
 [
