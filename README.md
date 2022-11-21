@@ -50,7 +50,7 @@ The 'filterExpressions' parameter can contain three different types of filter ex
 
 ```typescript
 type expressionFilter = {
-    key: string; // The property name to filter (can also be the path to a sub object property like 'details.adress.city' for example!)
+    key: string; // The property/sub-property name to filter
     op: "=" | "!=" | "<" | "<=" | ">" | ">=" | "cont"; // The comarison operation to perform
     val: string | number | boolean | null; // The value to compare with
 };
