@@ -18,14 +18,14 @@ Build an array like this:
 ```javascript
 [
   {key: 'name', op: '=', value: 'Justus}, 
-  {key: 'age', op: '>=', value: 16}, 
-  {key: 'age', op: '<=', value: 18}, 
+  {key: 'details.age', op: '>=', value: 16}, 
+  {key: 'details.age', op: '<=', value: 18}, 
   {key: 'isActive', op: '=', value: true},
   {key: 'registration', op: '<=', value: '2020-01-01'},
   {grp: '('}
-    {key: 'state', op: '=', value: 'Colorado}, 
+    {key: 'details.address.state', op: '=', value: 'Colorado}, 
     {con: "||"}, 
-    {key: 'state', op: '=', value: 'California}, 
+    {key: 'details.address.state', op: '=', value: 'California}, 
   {grp: ')'}
 ]
 ```
@@ -50,7 +50,7 @@ The 'filterExpressions' parameter can contain three different types of filter ex
 
 ```typescript
 type expressionFilter = {
-    key: string; // The property name to filter
+    key: string; // The property name to filter (can also be the path to a sub object property like 'details.adress.city' for example!)
     op: "=" | "!=" | "<" | "<=" | ">" | ">=" | "cont"; // The comarison operation to perform
     val: string | number | boolean | null; // The value to compare with
 };
