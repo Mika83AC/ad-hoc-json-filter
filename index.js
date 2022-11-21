@@ -3,13 +3,22 @@ exports.__esModule = true;
 exports.filter = void 0;
 var typy_1 = require("typy");
 function filter(json, filterExpressions) {
-    if (!Array.isArray(json))
+    if (!Array.isArray(json) || json.length === 0)
         return [];
+    try {
+        evaluateDataEntry(json[0], filterExpressions, true);
+    }
+    catch (error) {
+        console.error('Structure check of filter expression failed:');
+        console.error(error);
+        return [];
+    }
     return json.filter(function (jsonEntry) { return evaluateDataEntry(jsonEntry, filterExpressions); });
 }
 exports.filter = filter;
-function evaluateDataEntry(jsonEntry, filterExpressions) {
+function evaluateDataEntry(jsonEntry, filterExpressions, onlyStructCheck) {
     var _a;
+    if (onlyStructCheck === void 0) { onlyStructCheck = false; }
     var evalExpression = "";
     if (!jsonEntry || typeof jsonEntry !== "object")
         return false;
@@ -33,6 +42,10 @@ function evaluateDataEntry(jsonEntry, filterExpressions) {
             // Esnure previous evalExpression is a connector or a group open
             if (evalExpression.length > 0 && (!evalExpression.endsWith('&') && !evalExpression.endsWith('|') && !evalExpression.endsWith('(')))
                 evalExpression += "&&";
+            if (onlyStructCheck) {
+                evalExpression += "1";
+                continue;
+            }
             var filter_1 = expression;
             var filterValue = filter_1.val;
             var dataValue = (0, typy_1.t)(jsonEntry, filter_1.key).safeObject;
@@ -54,16 +67,17 @@ function evaluateDataEntry(jsonEntry, filterExpressions) {
                 evalExpression += dataValue.indexOf(filterValue) >= 0 ? "1" : "0";
         }
     }
-    // Now evaluate the final expression
+    // Security check if expression only contains allowed characters
     var expressionIsSafe = evalExpression.match(/[0&|()1]*/ig);
-    if (!expressionIsSafe)
+    if (!expressionIsSafe) {
+        console.error("Evaluated expression '".concat(evalExpression, "' contained invalid characters."));
         return false;
-    var result = false;
+    }
     try {
-        result = eval((_a = expressionIsSafe[0]) !== null && _a !== void 0 ? _a : '0');
+        return eval((_a = expressionIsSafe[0]) !== null && _a !== void 0 ? _a : '0');
     }
     catch (error) {
         console.error(error);
     }
-    return result;
+    return false;
 }

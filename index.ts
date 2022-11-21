@@ -1,13 +1,21 @@
 import { t } from 'typy';
 
 export function filter(json: Array<unknown>, filterExpressions: Array<expressionFilter | expressionConnector | expressionGroup>): Array<unknown> {
-   if (!Array.isArray(json))
+   if (!Array.isArray(json) || json.length === 0)
       return [];
+
+   try {
+      evaluateDataEntry(json[0], filterExpressions, true);
+   } catch (error) {
+      console.error('Structure check of filter expression failed:');
+      console.error(error);
+      return [];
+   }
 
    return json.filter(jsonEntry => evaluateDataEntry(jsonEntry, filterExpressions));
 }
 
-function evaluateDataEntry(jsonEntry: unknown, filterExpressions: Array<expressionFilter | expressionConnector | expressionGroup>): boolean {
+function evaluateDataEntry(jsonEntry: unknown, filterExpressions: Array<expressionFilter | expressionConnector | expressionGroup>, onlyStructCheck: boolean = false): boolean {
    let evalExpression = "";
 
    if (!jsonEntry || typeof jsonEntry !== "object")
@@ -41,6 +49,11 @@ function evaluateDataEntry(jsonEntry: unknown, filterExpressions: Array<expressi
          if (evalExpression.length > 0 && (!evalExpression.endsWith('&') && !evalExpression.endsWith('|') && !evalExpression.endsWith('(')))
             evalExpression += "&&";
 
+         if (onlyStructCheck) {
+            evalExpression += "1";
+            continue;
+         }
+
          const filter = (expression as expressionFilter);
          const filterValue = filter.val;
          const dataValue = t(jsonEntry, filter.key).safeObject;
@@ -73,20 +86,20 @@ function evaluateDataEntry(jsonEntry: unknown, filterExpressions: Array<expressi
 
    }
 
-   // Now evaluate the final expression
+   // Security check if expression only contains allowed characters
    const expressionIsSafe = evalExpression.match(/[0&|()1]*/ig);
-   if (!expressionIsSafe)
+   if (!expressionIsSafe) {
+      console.error(`Evaluated expression '${evalExpression}' contained invalid characters.`);
       return false;
-
-   let result = false;
+   }
 
    try {
-      result = eval(expressionIsSafe[0] ?? '0');
+      return eval(expressionIsSafe[0] ?? '0');
    } catch (error) {
       console.error(error);
    }
 
-   return result;
+   return false;
 }
 
 export type expressionFilter = {

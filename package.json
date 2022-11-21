@@ -1,6 +1,6 @@
 {
   "name": "ad-hoc-json-filter",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Dynamic filtering for JSON data",
   "author": "Michael Hilgers",
   "license": "ISC",
