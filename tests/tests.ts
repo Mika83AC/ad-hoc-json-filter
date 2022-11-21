@@ -1,4 +1,5 @@
 import { expressionConnector, expressionFilter, expressionGroup, filter } from ".."
+// @ts-ignore
 import * as fs from 'fs';
 
 const testDataOrig: Array<unknown> = JSON.parse(fs.readFileSync('./tests/testData.json', 'utf8'));

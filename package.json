@@ -1,18 +1,11 @@
 {
   "name": "ad-hoc-json-filter",
-  "version": "1.0.6",
+  "version": "1.0.8",
   "description": "Dynamic filtering for JSON data",
   "author": "Michael Hilgers",
   "license": "ISC",
   "repository": "Mika83AC/ad-hoc-json-filter",
-  "devDependencies": {
-    "@types/node": "^18.11.9",
-    "typescript": "^4.9.3"
-  },
   "dependencies": {
     "typy": "^3.3.0"
-  },
-  "scripts": {
-    "tsc": "tsc"
   }
 }

@@ -16,9 +16,9 @@ export function filter(json: Array<unknown>, filterExpressions: Array<expression
 }
 
 function evaluateDataEntry(jsonEntry: unknown, filterExpressions: Array<expressionFilter | expressionConnector | expressionGroup>, onlyStructCheck: boolean = false): boolean {
-   let evalExpression = "";
+   let evalExpression = '';
 
-   if (!jsonEntry || typeof jsonEntry !== "object")
+   if (!jsonEntry || typeof jsonEntry !== 'object')
       return false;
 
    for (const expression of filterExpressions) {
@@ -26,31 +26,31 @@ function evaluateDataEntry(jsonEntry: unknown, filterExpressions: Array<expressi
       if (!expression)
          continue;
 
-      if ((expression as expressionGroup).grp !== undefined && (expression as expressionGroup).grp === "(") {
+      if ((expression as expressionGroup).grp !== undefined && (expression as expressionGroup).grp === '(') {
          // Esnure previous evalExpression is a connector 
          if (evalExpression.length > 0 && (!evalExpression.endsWith('&') && !evalExpression.endsWith('|')))
-            evalExpression += "&&";
+            evalExpression += '&&';
 
-         evalExpression += "(";
+         evalExpression += '(';
       }
 
-      else if ((expression as expressionGroup).grp !== undefined && (expression as expressionGroup).grp === ")")
-         evalExpression += ")";
+      else if ((expression as expressionGroup).grp !== undefined && (expression as expressionGroup).grp === ')')
+         evalExpression += ')';
 
-      else if (((expression as expressionConnector).con !== undefined && (expression as expressionConnector).con === "&&"))
-         evalExpression += "&&";
+      else if (((expression as expressionConnector).con !== undefined && (expression as expressionConnector).con === '&&'))
+         evalExpression += '&&';
 
-      else if ((expression as expressionConnector).con !== undefined && (expression as expressionConnector).con === "||")
-         evalExpression += "||";
+      else if ((expression as expressionConnector).con !== undefined && (expression as expressionConnector).con === '||')
+         evalExpression += '||';
 
       else if ((expression as expressionFilter).key !== undefined && (expression as expressionFilter).key.length > 0) {
 
          // Esnure previous evalExpression is a connector or a group open
          if (evalExpression.length > 0 && (!evalExpression.endsWith('&') && !evalExpression.endsWith('|') && !evalExpression.endsWith('(')))
-            evalExpression += "&&";
+            evalExpression += '&&';
 
          if (onlyStructCheck) {
-            evalExpression += "1";
+            evalExpression += '1';
             continue;
          }
 
@@ -58,29 +58,29 @@ function evaluateDataEntry(jsonEntry: unknown, filterExpressions: Array<expressi
          const filterValue = filter.val;
          const dataValue = t(jsonEntry, filter.key).safeObject;
 
-         if (filter.op === "=")
-            evalExpression += dataValue === filterValue ? "1" : "0";
+         if (filter.op === '=')
+            evalExpression += dataValue === filterValue ? '1' : '0';
 
-         else if (filter.op === "!=")
-            evalExpression += dataValue !== filterValue ? "1" : "0";
+         else if (filter.op === '!=')
+            evalExpression += dataValue !== filterValue ? '1' : '0';
 
-         else if (filter.op === ">" && filterValue)
-            evalExpression += dataValue > filterValue ? "1" : "0";
+         else if (filter.op === '>' && filterValue)
+            evalExpression += dataValue > filterValue ? '1' : '0';
 
-         else if (filter.op === ">=" && filterValue)
-            evalExpression += dataValue >= filterValue ? "1" : "0";
+         else if (filter.op === '>=' && filterValue)
+            evalExpression += dataValue >= filterValue ? '1' : '0';
 
-         else if (filter.op === "<" && filterValue)
-            evalExpression += dataValue < filterValue ? "1" : "0";
+         else if (filter.op === '<' && filterValue)
+            evalExpression += dataValue < filterValue ? '1' : '0';
 
-         else if (filter.op === "<=" && filterValue)
-            evalExpression += dataValue <= filterValue ? "1" : "0";
+         else if (filter.op === '<=' && filterValue)
+            evalExpression += dataValue <= filterValue ? '1' : '0';
 
-         else if (filter.op === "cont" && Array.isArray(filterValue))
-            evalExpression += dataValue.indexOf(filterValue) >= 0 ? "1" : "0";
+         else if (filter.op === 'cont' && Array.isArray(filterValue))
+            evalExpression += dataValue.indexOf(filterValue) >= 0 ? '1' : '0';
 
-         else if (filter.op === "cont" && typeof filterValue === "string")
-            evalExpression += dataValue.indexOf(filterValue) >= 0 ? "1" : "0";
+         else if (filter.op === 'cont' && typeof filterValue === 'string')
+            evalExpression += dataValue.indexOf(filterValue) >= 0 ? '1' : '0';
 
       }
 
@@ -104,12 +104,12 @@ function evaluateDataEntry(jsonEntry: unknown, filterExpressions: Array<expressi
 
 export type expressionFilter = {
    key: string,
-   op: "=" | "!=" | "<" | "<=" | ">" | ">=" | "cont",
+   op: '=' | '!=' | '<' | '<=' | '>' | '>=' | 'cont',
    val: string | number | boolean | null | undefined
 }
 export type expressionConnector = {
-   con: "&&" | "||"
+   con: '&&' | '||'
 }
 export type expressionGroup = {
-   grp: "(" | ")"
+   grp: '(' | ')'
 }

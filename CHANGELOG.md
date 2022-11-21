@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.8
+- removed npm dev dependencies from package
+
+## 1.0.7
+- same as 1.0.8, but without changelog
+
 ## 1.0.6
 - just some README optimizations
 

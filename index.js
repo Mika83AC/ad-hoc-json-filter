@@ -19,52 +19,52 @@ exports.filter = filter;
 function evaluateDataEntry(jsonEntry, filterExpressions, onlyStructCheck) {
     var _a;
     if (onlyStructCheck === void 0) { onlyStructCheck = false; }
-    var evalExpression = "";
-    if (!jsonEntry || typeof jsonEntry !== "object")
+    var evalExpression = '';
+    if (!jsonEntry || typeof jsonEntry !== 'object')
         return false;
     for (var _i = 0, filterExpressions_1 = filterExpressions; _i < filterExpressions_1.length; _i++) {
         var expression = filterExpressions_1[_i];
         if (!expression)
             continue;
-        if (expression.grp !== undefined && expression.grp === "(") {
+        if (expression.grp !== undefined && expression.grp === '(') {
             // Esnure previous evalExpression is a connector 
             if (evalExpression.length > 0 && (!evalExpression.endsWith('&') && !evalExpression.endsWith('|')))
-                evalExpression += "&&";
-            evalExpression += "(";
+                evalExpression += '&&';
+            evalExpression += '(';
         }
-        else if (expression.grp !== undefined && expression.grp === ")")
-            evalExpression += ")";
-        else if ((expression.con !== undefined && expression.con === "&&"))
-            evalExpression += "&&";
-        else if (expression.con !== undefined && expression.con === "||")
-            evalExpression += "||";
+        else if (expression.grp !== undefined && expression.grp === ')')
+            evalExpression += ')';
+        else if ((expression.con !== undefined && expression.con === '&&'))
+            evalExpression += '&&';
+        else if (expression.con !== undefined && expression.con === '||')
+            evalExpression += '||';
         else if (expression.key !== undefined && expression.key.length > 0) {
             // Esnure previous evalExpression is a connector or a group open
             if (evalExpression.length > 0 && (!evalExpression.endsWith('&') && !evalExpression.endsWith('|') && !evalExpression.endsWith('(')))
-                evalExpression += "&&";
+                evalExpression += '&&';
             if (onlyStructCheck) {
-                evalExpression += "1";
+                evalExpression += '1';
                 continue;
             }
             var filter_1 = expression;
             var filterValue = filter_1.val;
             var dataValue = (0, typy_1.t)(jsonEntry, filter_1.key).safeObject;
-            if (filter_1.op === "=")
-                evalExpression += dataValue === filterValue ? "1" : "0";
-            else if (filter_1.op === "!=")
-                evalExpression += dataValue !== filterValue ? "1" : "0";
-            else if (filter_1.op === ">" && filterValue)
-                evalExpression += dataValue > filterValue ? "1" : "0";
-            else if (filter_1.op === ">=" && filterValue)
-                evalExpression += dataValue >= filterValue ? "1" : "0";
-            else if (filter_1.op === "<" && filterValue)
-                evalExpression += dataValue < filterValue ? "1" : "0";
-            else if (filter_1.op === "<=" && filterValue)
-                evalExpression += dataValue <= filterValue ? "1" : "0";
-            else if (filter_1.op === "cont" && Array.isArray(filterValue))
-                evalExpression += dataValue.indexOf(filterValue) >= 0 ? "1" : "0";
-            else if (filter_1.op === "cont" && typeof filterValue === "string")
-                evalExpression += dataValue.indexOf(filterValue) >= 0 ? "1" : "0";
+            if (filter_1.op === '=')
+                evalExpression += dataValue === filterValue ? '1' : '0';
+            else if (filter_1.op === '!=')
+                evalExpression += dataValue !== filterValue ? '1' : '0';
+            else if (filter_1.op === '>' && filterValue)
+                evalExpression += dataValue > filterValue ? '1' : '0';
+            else if (filter_1.op === '>=' && filterValue)
+                evalExpression += dataValue >= filterValue ? '1' : '0';
+            else if (filter_1.op === '<' && filterValue)
+                evalExpression += dataValue < filterValue ? '1' : '0';
+            else if (filter_1.op === '<=' && filterValue)
+                evalExpression += dataValue <= filterValue ? '1' : '0';
+            else if (filter_1.op === 'cont' && Array.isArray(filterValue))
+                evalExpression += dataValue.indexOf(filterValue) >= 0 ? '1' : '0';
+            else if (filter_1.op === 'cont' && typeof filterValue === 'string')
+                evalExpression += dataValue.indexOf(filterValue) >= 0 ? '1' : '0';
         }
     }
     // Security check if expression only contains allowed characters

@@ -1,6 +1,10 @@
 {
    "compilerOptions": {
       "module": "commonjs",
+      "lib": [
+         "ES2015",
+         "DOM"
+      ],
       "preserveConstEnums": true,
       "declaration": true,
       "allowUnreachableCode": false,

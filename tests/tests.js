@@ -1,6 +1,7 @@
 "use strict";
 exports.__esModule = true;
 var __1 = require("..");
+// @ts-ignore
 var fs = require("fs");
 var testDataOrig = JSON.parse(fs.readFileSync('./tests/testData.json', 'utf8'));
 var success = true;

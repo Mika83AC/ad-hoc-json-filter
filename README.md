@@ -17,9 +17,7 @@ Build an array like this:
 
 ```javascript
 [
-  { key: 'name', op: '=', value: 'Justus' }, 
-  { key: 'details.age', op: '>=', value: 16 }, 
-  { key: 'details.age', op: '<=', value: 18 }, 
+  { key: 'details.age', op: '>=', value: 18 }, 
   { key: 'isActive', op: '=', value: true },
   { key: 'registration', op: '<=', value: '2020-01-01' },
   { grp: '(' }
@@ -36,7 +34,7 @@ That's it. Just put your JSON array and the filter array into the filter functio
 The `filter()` function takes a JSON array and a filter array and will return the filtered result as new array:
 
 ```typescript
-function filter(json: Array<jsonLikeObject>, filterExpressions: Array<expressionFilter | expressionConnector | expressionGroup>);
+function filter(json: Array<unknown>, filterExpressions: Array<expressionFilter | expressionConnector | expressionGroup>);
 ```
 
 The `json` parameter must be an array with JSON objects (not stringified JSON!).
