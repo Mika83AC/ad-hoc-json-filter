@@ -61,10 +61,14 @@ function evaluateDataEntry(jsonEntry, filterExpressions, onlyStructCheck) {
                 evalExpression += dataValue < filterValue ? '1' : '0';
             else if (filter_1.op === '<=' && filterValue)
                 evalExpression += dataValue <= filterValue ? '1' : '0';
-            else if (filter_1.op === 'cont' && Array.isArray(filterValue))
+            else if (filter_1.op === 'cont' && Array.isArray(dataValue))
                 evalExpression += dataValue.indexOf(filterValue) >= 0 ? '1' : '0';
-            else if (filter_1.op === 'cont' && typeof filterValue === 'string')
+            else if (filter_1.op === 'cont' && typeof dataValue === 'string' && typeof filterValue === 'string')
                 evalExpression += dataValue.indexOf(filterValue) >= 0 ? '1' : '0';
+            else if (filter_1.op === 'sw' && typeof dataValue === 'string' && typeof filterValue === 'string')
+                evalExpression += dataValue.startsWith(filterValue) ? '1' : '0';
+            else if (filter_1.op === 'ew' && typeof dataValue === 'string' && typeof filterValue === 'string')
+                evalExpression += dataValue.endsWith(filterValue) ? '1' : '0';
         }
     }
     // Security check if expression only contains allowed characters

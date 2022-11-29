@@ -44,7 +44,7 @@ The `filterExpressions` parameter can contain three different types of filter ex
 ```typescript
 type expressionFilter = {
     key: string; // The property/sub-property name to filter
-    op: '=' | '!=' | '<' | '<=' | '>' | '>=' | 'cont'; // The comarison operation to perform
+    op: '=' | '!=' | '<' | '<=' | '>' | '>=' | 'cont' | 'sw' | 'ew'; // The comarison operation to perform
     val: string | number | boolean | null; // The value to compare with
 };
 type expressionConnector = {

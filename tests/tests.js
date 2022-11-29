@@ -31,6 +31,8 @@ test(testData, [{ key: "reputation", op: "<=", val: 4.25 }], (function (x) { ret
 test(testData, [{ key: "premium", op: "=", val: null }], (function (x) { return x.premium === null; }));
 test(testData, [{ key: "friends", op: "cont", val: "Nadine" }], (function (x) { return x.friends.indexOf("Nadine") >= 0; }));
 test(testData, [{ key: "address", op: "cont", val: "Colorado" }], (function (x) { return x.address.indexOf("Colorado") >= 0; }));
+test(testData, [{ key: "firstName", op: "sw", val: "In" }], (function (x) { return x.firstName.startsWith("In"); }));
+test(testData, [{ key: "firstName", op: "ew", val: "id" }], (function (x) { return x.firstName.endsWith("id"); }));
 test(testData, [{ key: "undefinedTest", op: "=", val: "hallo" }], (function (x) { return x.undefinedTest === "hallo"; }));
 test(testData, [{ key: "undefinedTest", op: "=", val: undefined }], (function (x) { return x.undefinedTest === undefined; }));
 // Testing connectors

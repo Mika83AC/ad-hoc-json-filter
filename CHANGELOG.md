@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.9
+- added 'sw' (startsWith) and 'ew' (endsWith) comparison operators
+- optimized 'cont' (contains) operator to work properly on strings and arrays
+
 ## 1.0.8
 - removed npm dev dependencies from package
 

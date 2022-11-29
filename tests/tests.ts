@@ -37,6 +37,8 @@ test(testData, [{ key: "reputation", op: "<=", val: 4.25 }], ((x: any) => x.repu
 test(testData, [{ key: "premium", op: "=", val: null }], ((x: any) => x.premium === null));
 test(testData, [{ key: "friends", op: "cont", val: "Nadine" }], ((x: any) => x.friends.indexOf("Nadine") >= 0));
 test(testData, [{ key: "address", op: "cont", val: "Colorado" }], ((x: any) => x.address.indexOf("Colorado") >= 0));
+test(testData, [{ key: "firstName", op: "sw", val: "In" }], ((x: any) => x.firstName.startsWith("In")));
+test(testData, [{ key: "firstName", op: "ew", val: "id" }], ((x: any) => x.firstName.endsWith("id")));
 test(testData, [{ key: "undefinedTest", op: "=", val: "hallo" }], ((x: any) => x.undefinedTest === "hallo"));
 test(testData, [{ key: "undefinedTest", op: "=", val: undefined }], ((x: any) => x.undefinedTest === undefined));
 
