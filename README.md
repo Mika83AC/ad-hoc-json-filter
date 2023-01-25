@@ -58,4 +58,7 @@ type expressionGroup = {
 If you don't pass a 'expressionConnector' between each 'expressionFilter', they will automatically be connect with AND logic.
 
 
+If you pass a `string` as filter value, but the data value isn't a string, the lib will perform a `.toString()` on `number | bigint | boolean` and a `.toISOString()` on `Date`. A `null` value in the data will be compared as `'null'`.
+
+
 And always remember: shit in, shit out :)

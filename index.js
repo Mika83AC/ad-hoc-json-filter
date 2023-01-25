@@ -49,6 +49,16 @@ function evaluateDataEntry(jsonEntry, filterExpressions, onlyStructCheck) {
             var filter_1 = expression;
             var filterValue = filter_1.val;
             var dataValue = (0, typy_1.t)(jsonEntry, filter_1.key).safeObject;
+            var typeOfDataValue = typeof dataValue;
+            // Fallback to string compare as this is better than matching apples with plums
+            if (typeof filterValue === 'string' && typeOfDataValue !== 'string') {
+                if (dataValue === null)
+                    dataValue = 'null';
+                else if (typeOfDataValue === 'number' || typeOfDataValue === 'boolean' || typeOfDataValue === 'bigint')
+                    dataValue = dataValue.toString();
+                else if (dataValue instanceof Date)
+                    dataValue = dataValue.toISOString();
+            }
             if (filter_1.op === '=')
                 evalExpression += dataValue === filterValue ? '1' : '0';
             else if (filter_1.op === '!=')

@@ -56,7 +56,20 @@ function evaluateDataEntry(jsonEntry: unknown, filterExpressions: Array<expressi
 
          const filter = (expression as expressionFilter);
          const filterValue = filter.val;
-         const dataValue = t(jsonEntry, filter.key).safeObject;
+
+         let dataValue = t(jsonEntry, filter.key).safeObject;
+         const typeOfDataValue = typeof dataValue;
+
+         // Fallback to string compare as this is better than matching apples with plums
+         if (typeof filterValue === 'string' && typeOfDataValue !== 'string') {
+
+            if (dataValue === null)
+               dataValue = 'null';
+            else if (typeOfDataValue === 'number' || typeOfDataValue === 'boolean' || typeOfDataValue === 'bigint')
+               dataValue = dataValue.toString();
+            else if (dataValue instanceof Date)
+               dataValue = dataValue.toISOString();
+         }
 
          if (filter.op === '=')
             evalExpression += dataValue === filterValue ? '1' : '0';
