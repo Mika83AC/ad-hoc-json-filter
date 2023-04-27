@@ -1,10 +1,12 @@
 "use strict";
-exports.__esModule = true;
+Object.defineProperty(exports, "__esModule", { value: true });
 exports.filter = void 0;
 var typy_1 = require("typy");
 function filter(json, filterExpressions) {
     if (!Array.isArray(json) || json.length === 0)
         return [];
+    if (!Array.isArray(filterExpressions) || filterExpressions.length === 0)
+        return json;
     try {
         evaluateDataEntry(json[0], filterExpressions, true);
     }

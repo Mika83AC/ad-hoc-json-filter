@@ -1,5 +1,5 @@
 "use strict";
-exports.__esModule = true;
+Object.defineProperty(exports, "__esModule", { value: true });
 var __1 = require("..");
 // @ts-ignore
 var fs = require("fs");

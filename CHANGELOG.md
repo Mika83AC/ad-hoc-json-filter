@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.0.12
+Fix for wrong deploy ... ^^
+
 ## 1.0.11
 Fixed empty result on empty filter expression.
 
