@@ -4,6 +4,9 @@ export function filter(json: Array<unknown>, filterExpressions: Array<expression
    if (!Array.isArray(json) || json.length === 0)
       return [];
 
+   if (!Array.isArray(filterExpressions) || filterExpressions.length === 0)
+      return json;
+
    try {
       evaluateDataEntry(json[0], filterExpressions, true);
    } catch (error) {

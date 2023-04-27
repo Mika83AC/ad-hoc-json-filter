@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.0.11
+Fixed empty result on empty filter expression.
+
 ## 1.0.10
 Added string compare fallback when filter is a string but data value isn't a string. See readme for details.
 
