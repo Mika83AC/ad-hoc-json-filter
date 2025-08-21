@@ -58,7 +58,7 @@ function compileFilterExpression(filterExpressions: Array<expressionFilter | exp
 
       if ((expression as expressionGroup).grp !== undefined) {
          const grp = (expression as expressionGroup).grp;
-         
+
          // Add implicit AND before opening group if needed
          if (grp === '(' && lastWasCondition) {
             compiled.push({
@@ -66,12 +66,12 @@ function compileFilterExpression(filterExpressions: Array<expressionFilter | exp
                op: '&&'
             });
          }
-         
+
          compiled.push({
             type: 'group',
             grp: grp
          });
-         
+
          lastWasCondition = (grp === ')');
       } else if ((expression as expressionConnector).con !== undefined) {
          compiled.push({
@@ -81,7 +81,7 @@ function compileFilterExpression(filterExpressions: Array<expressionFilter | exp
          lastWasCondition = false;
       } else if ((expression as expressionFilter).key !== undefined) {
          const filter = expression as expressionFilter;
-         
+
          // Add implicit AND between consecutive conditions
          if (lastWasCondition) {
             compiled.push({
@@ -89,7 +89,7 @@ function compileFilterExpression(filterExpressions: Array<expressionFilter | exp
                op: '&&'
             });
          }
-         
+
          compiled.push({
             type: 'condition',
             func: createFilterFunction(filter)

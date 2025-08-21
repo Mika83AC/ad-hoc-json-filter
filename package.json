@@ -1,16 +1,43 @@
 {
   "name": "ad-hoc-json-filter",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "description": "Dynamic filtering for JSON data",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/index.js",
+    "dist/index.d.ts",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "keywords": [
+    "json",
+    "filter",
+    "dynamic",
+    "runtime",
+    "query",
+    "search",
+    "data"
+  ],
   "author": "Michael Hilgers",
   "license": "ISC",
-  "repository": "Mika83AC/ad-hoc-json-filter",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Mika83AC/ad-hoc-json-filter.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Mika83AC/ad-hoc-json-filter/issues"
+  },
+  "homepage": "https://github.com/Mika83AC/ad-hoc-json-filter#readme",
   "dependencies": {},
   "devDependencies": {
     "typescript": "^5.9.2"
   },
   "scripts": {
     "build": "tsc",
-    "test": "tsc && node ./tests/tests.js"
+    "test": "npm run build && node ./tests/tests.js",
+    "prepublishOnly": "npm run test",
+    "version": "npm run build && git add -A",
+    "postversion": "git push && git push --tags"
   }
 }

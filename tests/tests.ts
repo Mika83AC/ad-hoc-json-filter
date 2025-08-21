@@ -1,4 +1,4 @@
-import { expressionConnector, expressionFilter, expressionGroup, filter } from ".."
+import { expressionConnector, expressionFilter, expressionGroup, filter } from "../dist/index"
 // @ts-ignore
 import * as fs from 'fs';
 

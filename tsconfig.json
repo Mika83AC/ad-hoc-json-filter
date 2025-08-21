@@ -1,6 +1,8 @@
 {
    "compilerOptions": {
       "module": "commonjs",
+      "outDir": "./dist",
+      "rootDir": "./",
       "lib": [
          "ES2015",
          "DOM"
@@ -14,5 +16,13 @@
       "noImplicitThis": true,
       "noUncheckedIndexedAccess": true,
       "strictNullChecks": true
-   }
+   },
+   "include": [
+      "index.ts"
+   ],
+   "exclude": [
+      "tests/**/*",
+      "node_modules",
+      "dist"
+   ]
 }
