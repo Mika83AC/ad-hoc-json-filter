@@ -5,7 +5,12 @@
   "author": "Michael Hilgers",
   "license": "ISC",
   "repository": "Mika83AC/ad-hoc-json-filter",
-  "dependencies": {
-    "typy": "^3.3.0"
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.9.2"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "tsc && node ./tests/tests.js"
   }
 }
