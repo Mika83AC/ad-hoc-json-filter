@@ -1,8 +1,90 @@
 "use strict";
-// Performance optimizations: Removed typy dependency, use direct property access
+// Performance optimizations: Property access caching, object pooling, and micro-optimizations
 // Compile filter expressions to functions for better performance
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.filter = filter;
+exports.filterBatch = filterBatch;
+// Cache for compiled property access functions
+var propertyAccessCache = new Map();
+// Pre-compile property access functions for better performance
+function createPropertyAccessor(path) {
+    if (propertyAccessCache.has(path)) {
+        return propertyAccessCache.get(path);
+    }
+    if (path.indexOf('.') === -1) {
+        // Simple property access - fastest path
+        var accessor_1 = function (obj) { return obj === null || obj === void 0 ? void 0 : obj[path]; };
+        propertyAccessCache.set(path, accessor_1);
+        return accessor_1;
+    }
+    // Complex nested path - compile to function
+    var keys = path.split('.');
+    var accessor = function (obj) {
+        var current = obj;
+        for (var i = 0; i < keys.length; i++) {
+            if (current == null)
+                return undefined;
+            current = current[keys[i]];
+        }
+        return current;
+    };
+    propertyAccessCache.set(path, accessor);
+    return accessor;
+}
+// Object pool for evaluation stack
+var EvaluationStack = /** @class */ (function () {
+    function EvaluationStack() {
+        this.values = [];
+        this.operators = [];
+        this.valueIndex = 0;
+        this.operatorIndex = 0;
+    }
+    EvaluationStack.prototype.reset = function () {
+        this.valueIndex = 0;
+        this.operatorIndex = 0;
+    };
+    EvaluationStack.prototype.pushValue = function (value) {
+        this.values[this.valueIndex++] = value;
+    };
+    EvaluationStack.prototype.popValue = function () {
+        return this.values[--this.valueIndex];
+    };
+    EvaluationStack.prototype.pushOperator = function (op) {
+        this.operators[this.operatorIndex++] = op;
+    };
+    EvaluationStack.prototype.popOperator = function () {
+        return this.operators[--this.operatorIndex];
+    };
+    EvaluationStack.prototype.hasValues = function () {
+        return this.valueIndex >= 2;
+    };
+    EvaluationStack.prototype.hasOperators = function () {
+        return this.operatorIndex > 0;
+    };
+    EvaluationStack.prototype.getLastOperator = function () {
+        return this.operatorIndex > 0 ? this.operators[this.operatorIndex - 1] : undefined;
+    };
+    EvaluationStack.prototype.getResult = function () {
+        return this.valueIndex > 0 ? this.values[0] : true;
+    };
+    return EvaluationStack;
+}());
+// Global evaluation stack pool
+var evaluationStackPool = [];
+var maxPoolSize = 10;
+function getEvaluationStack() {
+    if (evaluationStackPool.length > 0) {
+        var stack = evaluationStackPool.pop();
+        stack.reset();
+        return stack;
+    }
+    return new EvaluationStack();
+}
+function releaseEvaluationStack(stack) {
+    if (evaluationStackPool.length < maxPoolSize) {
+        evaluationStackPool.push(stack);
+    }
+}
 function filter(json, filterExpressions) {
     if (!Array.isArray(json) || json.length === 0)
         return [];
@@ -16,20 +98,90 @@ function filter(json, filterExpressions) {
     }
     return json.filter(compiledFilter);
 }
-// Helper function to safely get nested property values
-function getNestedProperty(obj, path) {
-    if (!obj || typeof obj !== 'object')
-        return undefined;
-    var keys = path.split('.');
-    var current = obj;
-    for (var _i = 0, keys_1 = keys; _i < keys_1.length; _i++) {
-        var key = keys_1[_i];
-        if (current == null || typeof current !== 'object') {
-            return undefined;
+// Optimized comparison functions with fast paths
+var createComparisonFunction = (function () {
+    // Pre-compile comparison functions for common cases
+    var comparisonCache = new Map();
+    return function (op) {
+        if (comparisonCache.has(op)) {
+            return comparisonCache.get(op);
         }
-        current = current[key];
+        var compareFn;
+        switch (op) {
+            case '=':
+                compareFn = function (dataValue, filterValue) { return dataValue === filterValue; };
+                break;
+            case '!=':
+                compareFn = function (dataValue, filterValue) { return dataValue !== filterValue; };
+                break;
+            case '>':
+                compareFn = function (dataValue, filterValue) { return filterValue != null && dataValue > filterValue; };
+                break;
+            case '>=':
+                compareFn = function (dataValue, filterValue) { return filterValue != null && dataValue >= filterValue; };
+                break;
+            case '<':
+                compareFn = function (dataValue, filterValue) { return filterValue != null && dataValue < filterValue; };
+                break;
+            case '<=':
+                compareFn = function (dataValue, filterValue) { return filterValue != null && dataValue <= filterValue; };
+                break;
+            case 'cont':
+                compareFn = function (dataValue, filterValue) {
+                    if (Array.isArray(dataValue)) {
+                        return dataValue.indexOf(filterValue) >= 0;
+                    }
+                    if (typeof dataValue === 'string' && typeof filterValue === 'string') {
+                        return dataValue.indexOf(filterValue) >= 0;
+                    }
+                    return false;
+                };
+                break;
+            case 'sw':
+                compareFn = function (dataValue, filterValue) {
+                    return typeof dataValue === 'string' &&
+                        typeof filterValue === 'string' &&
+                        dataValue.startsWith(filterValue);
+                };
+                break;
+            case 'ew':
+                compareFn = function (dataValue, filterValue) {
+                    return typeof dataValue === 'string' &&
+                        typeof filterValue === 'string' &&
+                        dataValue.endsWith(filterValue);
+                };
+                break;
+            default:
+                compareFn = function () { return false; };
+        }
+        comparisonCache.set(op, compareFn);
+        return compareFn;
+    };
+})();
+// Type coercion optimization - avoid repeated type checking
+function coerceValue(dataValue, filterValue) {
+    // Fast path for exact type matches
+    if (typeof dataValue === typeof filterValue) {
+        return dataValue;
     }
-    return current;
+    // Only coerce when filter value is string and data value is not
+    if (typeof filterValue === 'string' && typeof dataValue !== 'string') {
+        if (dataValue === null) {
+            return 'null';
+        }
+        else if (typeof dataValue === 'number' || typeof dataValue === 'boolean' || typeof dataValue === 'bigint') {
+            return dataValue.toString();
+        }
+        else if (dataValue instanceof Date) {
+            return dataValue.toISOString();
+        }
+    }
+    return dataValue;
+}
+// Helper function to safely get nested property values (legacy compatibility)
+function getNestedProperty(obj, path) {
+    var accessor = createPropertyAccessor(path);
+    return accessor(obj);
 }
 // Compile filter expressions to functions for better performance
 function compileFilterExpression(filterExpressions) {
@@ -76,125 +228,125 @@ function compileFilterExpression(filterExpressions) {
             }
             compiled.push({
                 type: 'condition',
-                func: createFilterFunction(filter_1)
+                func: createOptimizedFilterFunction(filter_1)
             });
             lastWasCondition = true;
         }
     }
     // Convert to evaluation function
-    return function (data) { return evaluateCompiledExpression(data, compiled); };
+    return function (data) { return evaluateCompiledExpressionOptimized(data, compiled); };
 }
 // Create optimized filter function for a single condition
-function createFilterFunction(filter) {
+function createOptimizedFilterFunction(filter) {
     var key = filter.key, op = filter.op, filterValue = filter.val;
+    // Pre-compile property accessor and comparison function
+    var propertyAccessor = createPropertyAccessor(key);
+    var compareFn = createComparisonFunction(op);
+    // Return optimized function with minimal overhead
     return function (data) {
-        var dataValue = getNestedProperty(data, key);
-        // Type coercion for better comparison (same logic as before but optimized)
-        if (typeof filterValue === 'string' && typeof dataValue !== 'string') {
-            if (dataValue === null) {
-                dataValue = 'null';
-            }
-            else if (typeof dataValue === 'number' || typeof dataValue === 'boolean' || typeof dataValue === 'bigint') {
-                dataValue = dataValue.toString();
-            }
-            else if (dataValue instanceof Date) {
-                dataValue = dataValue.toISOString();
-            }
-        }
-        switch (op) {
-            case '=':
-                return dataValue === filterValue;
-            case '!=':
-                return dataValue !== filterValue;
-            case '>':
-                return filterValue != null && dataValue > filterValue;
-            case '>=':
-                return filterValue != null && dataValue >= filterValue;
-            case '<':
-                return filterValue != null && dataValue < filterValue;
-            case '<=':
-                return filterValue != null && dataValue <= filterValue;
-            case 'cont':
-                if (Array.isArray(dataValue)) {
-                    return dataValue.indexOf(filterValue) >= 0;
-                }
-                if (typeof dataValue === 'string' && typeof filterValue === 'string') {
-                    return dataValue.indexOf(filterValue) >= 0;
-                }
-                return false;
-            case 'sw':
-                return typeof dataValue === 'string' && typeof filterValue === 'string' && dataValue.startsWith(filterValue);
-            case 'ew':
-                return typeof dataValue === 'string' && typeof filterValue === 'string' && dataValue.endsWith(filterValue);
-            default:
-                return false;
-        }
+        var dataValue = propertyAccessor(data);
+        var coercedValue = coerceValue(dataValue, filterValue);
+        return compareFn(coercedValue, filterValue);
     };
 }
-// Optimized evaluation without string building and eval
-function evaluateCompiledExpression(data, compiled) {
+// Operator precedence lookup table (faster than function)
+var precedence = {
+    '&&': 2,
+    '||': 1
+};
+// Optimized evaluation using object pooling
+function evaluateCompiledExpressionOptimized(data, compiled) {
     if (compiled.length === 0)
         return true;
-    // Use a stack-based approach for evaluation
-    var values = [];
-    var operators = [];
-    for (var _i = 0, compiled_1 = compiled; _i < compiled_1.length; _i++) {
-        var item = compiled_1[_i];
-        if (item.type === 'condition' && item.func) {
-            values.push(item.func(data));
-        }
-        else if (item.type === 'group' && item.grp === '(') {
-            operators.push('(');
-        }
-        else if (item.type === 'group' && item.grp === ')') {
-            // Process until we find the matching '('
-            while (operators.length > 0 && operators[operators.length - 1] !== '(') {
-                if (!processOperator(values, operators))
-                    return false;
+    var stack = getEvaluationStack();
+    try {
+        for (var i = 0; i < compiled.length; i++) {
+            var item = compiled[i];
+            if (!item)
+                continue;
+            if (item.type === 'condition' && item.func) {
+                stack.pushValue(item.func(data));
             }
-            operators.pop(); // Remove the '('
-        }
-        else if (item.type === 'operator' && item.op) {
-            // Process higher or equal precedence operators
-            while (operators.length > 0 &&
-                operators[operators.length - 1] !== '(' &&
-                getPrecedence(operators[operators.length - 1]) >= getPrecedence(item.op)) {
-                if (!processOperator(values, operators))
-                    return false;
+            else if (item.type === 'group' && item.grp === '(') {
+                stack.pushOperator('(');
             }
-            operators.push(item.op);
+            else if (item.type === 'group' && item.grp === ')') {
+                // Process until we find the matching '('
+                while (stack.hasOperators() && stack.getLastOperator() !== '(') {
+                    if (!processOperatorOptimized(stack))
+                        return false;
+                }
+                stack.popOperator(); // Remove the '('
+            }
+            else if (item.type === 'operator' && item.op) {
+                // Process higher or equal precedence operators
+                var currentPrecedence = precedence[item.op] || 0;
+                while (stack.hasOperators() &&
+                    stack.getLastOperator() !== '(' &&
+                    (precedence[stack.getLastOperator()] || 0) >= currentPrecedence) {
+                    if (!processOperatorOptimized(stack))
+                        return false;
+                }
+                stack.pushOperator(item.op);
+            }
         }
+        // Process remaining operators
+        while (stack.hasOperators()) {
+            if (!processOperatorOptimized(stack))
+                return false;
+        }
+        return stack.getResult();
     }
-    // Process remaining operators
-    while (operators.length > 0) {
-        if (!processOperator(values, operators))
-            return false;
+    finally {
+        releaseEvaluationStack(stack);
     }
-    return values.length > 0 && values[0] !== undefined ? values[0] : true;
 }
-// Helper function to get operator precedence
-function getPrecedence(op) {
-    if (op === '&&')
-        return 2;
-    if (op === '||')
-        return 1;
-    return 0;
-}
-// Helper function to process operators
-function processOperator(values, operators) {
-    if (operators.length === 0 || values.length < 2)
+// Optimized operator processing
+function processOperatorOptimized(stack) {
+    if (!stack.hasOperators() || !stack.hasValues())
         return false;
-    var op = operators.pop();
-    var right = values.pop();
-    var left = values.pop();
+    var op = stack.popOperator();
+    var right = stack.popValue();
+    var left = stack.popValue();
     if (op === '&&') {
-        values.push(left && right);
+        stack.pushValue(left && right);
     }
     else if (op === '||') {
-        values.push(left || right);
+        stack.pushValue(left || right);
     }
     else {
         return false;
     }
     return true;
+}
+// Batch processing optimization for very large datasets
+function filterBatch(json, filterExpressions, batchSize) {
+    if (batchSize === void 0) { batchSize = 1000; }
+    if (!Array.isArray(json) || json.length === 0)
+        return [];
+    if (!Array.isArray(filterExpressions) || filterExpressions.length === 0)
+        return json;
+    // For smaller arrays, use regular filter
+    if (json.length < batchSize * 2) {
+        return filter(json, filterExpressions);
+    }
+    var compiledFilter = compileFilterExpression(filterExpressions);
+    if (!compiledFilter) {
+        console.error('Failed to compile filter expression');
+        return [];
+    }
+    var result = [];
+    var batches = Math.ceil(json.length / batchSize);
+    // Process in batches to improve cache locality
+    for (var batchIndex = 0; batchIndex < batches; batchIndex++) {
+        var start = batchIndex * batchSize;
+        var end = Math.min(start + batchSize, json.length);
+        // Use a tight loop for better performance
+        for (var i = start; i < end; i++) {
+            if (compiledFilter(json[i])) {
+                result.push(json[i]);
+            }
+        }
+    }
+    return result;
 }

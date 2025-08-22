@@ -1,7 +1,102 @@
-// Performance optimizations: Removed typy dependency, use direct property access
+// Performance optimizations: Property access caching, object pooling, and micro-optimizations
 // Compile filter expressions to functions for better performance
 
 type CompiledExpression = (data: any) => boolean;
+
+// Cache for compiled property access functions
+const propertyAccessCache = new Map<string, (obj: any) => any>();
+
+// Pre-compile property access functions for better performance
+function createPropertyAccessor(path: string): (obj: any) => any {
+   if (propertyAccessCache.has(path)) {
+      return propertyAccessCache.get(path)!;
+   }
+
+   if (path.indexOf('.') === -1) {
+      // Simple property access - fastest path
+      const accessor = (obj: any) => obj?.[path];
+      propertyAccessCache.set(path, accessor);
+      return accessor;
+   }
+
+   // Complex nested path - compile to function
+   const keys = path.split('.');
+   const accessor = (obj: any) => {
+      let current = obj;
+      for (let i = 0; i < keys.length; i++) {
+         if (current == null) return undefined;
+         current = current[keys[i]!];
+      }
+      return current;
+   };
+
+   propertyAccessCache.set(path, accessor);
+   return accessor;
+}
+
+// Object pool for evaluation stack
+class EvaluationStack {
+   private values: boolean[] = [];
+   private operators: string[] = [];
+   private valueIndex = 0;
+   private operatorIndex = 0;
+
+   reset(): void {
+      this.valueIndex = 0;
+      this.operatorIndex = 0;
+   }
+
+   pushValue(value: boolean): void {
+      this.values[this.valueIndex++] = value;
+   }
+
+   popValue(): boolean {
+      return this.values[--this.valueIndex]!;
+   }
+
+   pushOperator(op: string): void {
+      this.operators[this.operatorIndex++] = op;
+   }
+
+   popOperator(): string {
+      return this.operators[--this.operatorIndex]!;
+   }
+
+   hasValues(): boolean {
+      return this.valueIndex >= 2;
+   }
+
+   hasOperators(): boolean {
+      return this.operatorIndex > 0;
+   }
+
+   getLastOperator(): string | undefined {
+      return this.operatorIndex > 0 ? this.operators[this.operatorIndex - 1] : undefined;
+   }
+
+   getResult(): boolean {
+      return this.valueIndex > 0 ? this.values[0]! : true;
+   }
+}
+
+// Global evaluation stack pool
+const evaluationStackPool: EvaluationStack[] = [];
+const maxPoolSize = 10;
+
+function getEvaluationStack(): EvaluationStack {
+   if (evaluationStackPool.length > 0) {
+      const stack = evaluationStackPool.pop()!;
+      stack.reset();
+      return stack;
+   }
+   return new EvaluationStack();
+}
+
+function releaseEvaluationStack(stack: EvaluationStack): void {
+   if (evaluationStackPool.length < maxPoolSize) {
+      evaluationStackPool.push(stack);
+   }
+}
 
 export function filter(json: Array<unknown>, filterExpressions: Array<expressionFilter | expressionConnector | expressionGroup>): Array<unknown> {
    if (!Array.isArray(json) || json.length === 0)
@@ -20,21 +115,94 @@ export function filter(json: Array<unknown>, filterExpressions: Array<expression
    return json.filter(compiledFilter);
 }
 
-// Helper function to safely get nested property values
-function getNestedProperty(obj: any, path: string): any {
-   if (!obj || typeof obj !== 'object') return undefined;
+// Optimized comparison functions with fast paths
+const createComparisonFunction = (() => {
+   // Pre-compile comparison functions for common cases
+   const comparisonCache = new Map<string, (dataValue: any, filterValue: any) => boolean>();
 
-   const keys = path.split('.');
-   let current = obj;
-
-   for (const key of keys) {
-      if (current == null || typeof current !== 'object') {
-         return undefined;
+   return (op: string): (dataValue: any, filterValue: any) => boolean => {
+      if (comparisonCache.has(op)) {
+         return comparisonCache.get(op)!;
       }
-      current = current[key];
+
+      let compareFn: (dataValue: any, filterValue: any) => boolean;
+
+      switch (op) {
+         case '=':
+            compareFn = (dataValue, filterValue) => dataValue === filterValue;
+            break;
+         case '!=':
+            compareFn = (dataValue, filterValue) => dataValue !== filterValue;
+            break;
+         case '>':
+            compareFn = (dataValue, filterValue) => filterValue != null && dataValue > filterValue;
+            break;
+         case '>=':
+            compareFn = (dataValue, filterValue) => filterValue != null && dataValue >= filterValue;
+            break;
+         case '<':
+            compareFn = (dataValue, filterValue) => filterValue != null && dataValue < filterValue;
+            break;
+         case '<=':
+            compareFn = (dataValue, filterValue) => filterValue != null && dataValue <= filterValue;
+            break;
+         case 'cont':
+            compareFn = (dataValue, filterValue) => {
+               if (Array.isArray(dataValue)) {
+                  return dataValue.indexOf(filterValue) >= 0;
+               }
+               if (typeof dataValue === 'string' && typeof filterValue === 'string') {
+                  return dataValue.indexOf(filterValue) >= 0;
+               }
+               return false;
+            };
+            break;
+         case 'sw':
+            compareFn = (dataValue, filterValue) =>
+               typeof dataValue === 'string' &&
+               typeof filterValue === 'string' &&
+               dataValue.startsWith(filterValue);
+            break;
+         case 'ew':
+            compareFn = (dataValue, filterValue) =>
+               typeof dataValue === 'string' &&
+               typeof filterValue === 'string' &&
+               dataValue.endsWith(filterValue);
+            break;
+         default:
+            compareFn = () => false;
+      }
+
+      comparisonCache.set(op, compareFn);
+      return compareFn;
+   };
+})();
+
+// Type coercion optimization - avoid repeated type checking
+function coerceValue(dataValue: any, filterValue: any): any {
+   // Fast path for exact type matches
+   if (typeof dataValue === typeof filterValue) {
+      return dataValue;
    }
 
-   return current;
+   // Only coerce when filter value is string and data value is not
+   if (typeof filterValue === 'string' && typeof dataValue !== 'string') {
+      if (dataValue === null) {
+         return 'null';
+      } else if (typeof dataValue === 'number' || typeof dataValue === 'boolean' || typeof dataValue === 'bigint') {
+         return dataValue.toString();
+      } else if (dataValue instanceof Date) {
+         return dataValue.toISOString();
+      }
+   }
+
+   return dataValue;
+}
+
+// Helper function to safely get nested property values (legacy compatibility)
+function getNestedProperty(obj: any, path: string): any {
+   const accessor = createPropertyAccessor(path);
+   return accessor(obj);
 }
 
 // Compile filter expressions to functions for better performance
@@ -92,67 +260,40 @@ function compileFilterExpression(filterExpressions: Array<expressionFilter | exp
 
          compiled.push({
             type: 'condition',
-            func: createFilterFunction(filter)
+            func: createOptimizedFilterFunction(filter)
          });
          lastWasCondition = true;
       }
    }
 
    // Convert to evaluation function
-   return (data: any) => evaluateCompiledExpression(data, compiled);
+   return (data: any) => evaluateCompiledExpressionOptimized(data, compiled);
 }
 
 // Create optimized filter function for a single condition
-function createFilterFunction(filter: expressionFilter): (data: any) => boolean {
+function createOptimizedFilterFunction(filter: expressionFilter): (data: any) => boolean {
    const { key, op, val: filterValue } = filter;
 
+   // Pre-compile property accessor and comparison function
+   const propertyAccessor = createPropertyAccessor(key);
+   const compareFn = createComparisonFunction(op);
+
+   // Return optimized function with minimal overhead
    return (data: any) => {
-      let dataValue = getNestedProperty(data, key);
-
-      // Type coercion for better comparison (same logic as before but optimized)
-      if (typeof filterValue === 'string' && typeof dataValue !== 'string') {
-         if (dataValue === null) {
-            dataValue = 'null';
-         } else if (typeof dataValue === 'number' || typeof dataValue === 'boolean' || typeof dataValue === 'bigint') {
-            dataValue = dataValue.toString();
-         } else if (dataValue instanceof Date) {
-            dataValue = dataValue.toISOString();
-         }
-      }
-
-      switch (op) {
-         case '=':
-            return dataValue === filterValue;
-         case '!=':
-            return dataValue !== filterValue;
-         case '>':
-            return filterValue != null && dataValue > filterValue;
-         case '>=':
-            return filterValue != null && dataValue >= filterValue;
-         case '<':
-            return filterValue != null && dataValue < filterValue;
-         case '<=':
-            return filterValue != null && dataValue <= filterValue;
-         case 'cont':
-            if (Array.isArray(dataValue)) {
-               return dataValue.indexOf(filterValue) >= 0;
-            }
-            if (typeof dataValue === 'string' && typeof filterValue === 'string') {
-               return dataValue.indexOf(filterValue) >= 0;
-            }
-            return false;
-         case 'sw':
-            return typeof dataValue === 'string' && typeof filterValue === 'string' && dataValue.startsWith(filterValue);
-         case 'ew':
-            return typeof dataValue === 'string' && typeof filterValue === 'string' && dataValue.endsWith(filterValue);
-         default:
-            return false;
-      }
+      const dataValue = propertyAccessor(data);
+      const coercedValue = coerceValue(dataValue, filterValue);
+      return compareFn(coercedValue, filterValue);
    };
 }
 
-// Optimized evaluation without string building and eval
-function evaluateCompiledExpression(data: any, compiled: Array<{
+// Operator precedence lookup table (faster than function)
+const precedence: Record<string, number> = {
+   '&&': 2,
+   '||': 1
+};
+
+// Optimized evaluation using object pooling
+function evaluateCompiledExpressionOptimized(data: any, compiled: Array<{
    type: 'condition' | 'operator' | 'group';
    func?: (data: any) => boolean;
    op?: string;
@@ -160,64 +301,98 @@ function evaluateCompiledExpression(data: any, compiled: Array<{
 }>): boolean {
    if (compiled.length === 0) return true;
 
-   // Use a stack-based approach for evaluation
-   const values: boolean[] = [];
-   const operators: string[] = [];
+   const stack = getEvaluationStack();
 
-   for (const item of compiled) {
-      if (item.type === 'condition' && item.func) {
-         values.push(item.func(data));
-      } else if (item.type === 'group' && item.grp === '(') {
-         operators.push('(');
-      } else if (item.type === 'group' && item.grp === ')') {
-         // Process until we find the matching '('
-         while (operators.length > 0 && operators[operators.length - 1] !== '(') {
-            if (!processOperator(values, operators)) return false;
+   try {
+      for (let i = 0; i < compiled.length; i++) {
+         const item = compiled[i];
+         if (!item) continue;
+
+         if (item.type === 'condition' && item.func) {
+            stack.pushValue(item.func(data));
+         } else if (item.type === 'group' && item.grp === '(') {
+            stack.pushOperator('(');
+         } else if (item.type === 'group' && item.grp === ')') {
+            // Process until we find the matching '('
+            while (stack.hasOperators() && stack.getLastOperator() !== '(') {
+               if (!processOperatorOptimized(stack)) return false;
+            }
+            stack.popOperator(); // Remove the '('
+         } else if (item.type === 'operator' && item.op) {
+            // Process higher or equal precedence operators
+            const currentPrecedence = precedence[item.op] || 0;
+            while (stack.hasOperators() &&
+               stack.getLastOperator() !== '(' &&
+               (precedence[stack.getLastOperator()!] || 0) >= currentPrecedence) {
+               if (!processOperatorOptimized(stack)) return false;
+            }
+            stack.pushOperator(item.op);
          }
-         operators.pop(); // Remove the '('
-      } else if (item.type === 'operator' && item.op) {
-         // Process higher or equal precedence operators
-         while (operators.length > 0 &&
-            operators[operators.length - 1] !== '(' &&
-            getPrecedence(operators[operators.length - 1]!) >= getPrecedence(item.op)) {
-            if (!processOperator(values, operators)) return false;
-         }
-         operators.push(item.op);
       }
-   }
 
-   // Process remaining operators
-   while (operators.length > 0) {
-      if (!processOperator(values, operators)) return false;
-   }
+      // Process remaining operators
+      while (stack.hasOperators()) {
+         if (!processOperatorOptimized(stack)) return false;
+      }
 
-   return values.length > 0 && values[0] !== undefined ? values[0] : true;
+      return stack.getResult();
+   } finally {
+      releaseEvaluationStack(stack);
+   }
 }
 
-// Helper function to get operator precedence
-function getPrecedence(op: string): number {
-   if (op === '&&') return 2;
-   if (op === '||') return 1;
-   return 0;
-}
+// Optimized operator processing
+function processOperatorOptimized(stack: EvaluationStack): boolean {
+   if (!stack.hasOperators() || !stack.hasValues()) return false;
 
-// Helper function to process operators
-function processOperator(values: boolean[], operators: string[]): boolean {
-   if (operators.length === 0 || values.length < 2) return false;
-
-   const op = operators.pop()!;
-   const right = values.pop()!;
-   const left = values.pop()!;
+   const op = stack.popOperator();
+   const right = stack.popValue();
+   const left = stack.popValue();
 
    if (op === '&&') {
-      values.push(left && right);
+      stack.pushValue(left && right);
    } else if (op === '||') {
-      values.push(left || right);
+      stack.pushValue(left || right);
    } else {
       return false;
    }
 
    return true;
+}
+
+// Batch processing optimization for very large datasets
+export function filterBatch(json: Array<unknown>, filterExpressions: Array<expressionFilter | expressionConnector | expressionGroup>, batchSize = 1000): Array<unknown> {
+   if (!Array.isArray(json) || json.length === 0) return [];
+   if (!Array.isArray(filterExpressions) || filterExpressions.length === 0) return json;
+
+   // For smaller arrays, use regular filter
+   if (json.length < batchSize * 2) {
+      return filter(json, filterExpressions);
+   }
+
+   const compiledFilter = compileFilterExpression(filterExpressions);
+   if (!compiledFilter) {
+      console.error('Failed to compile filter expression');
+      return [];
+   }
+
+   const result: unknown[] = [];
+   const batches = Math.ceil(json.length / batchSize);
+
+   // Process in batches to improve cache locality
+   for (let batchIndex = 0; batchIndex < batches; batchIndex++) {
+      const start = batchIndex * batchSize;
+      const end = Math.min(start + batchSize, json.length);
+
+      // Use a tight loop for better performance
+      for (let i = start; i < end; i++) {
+         if (compiledFilter(json[i])) {
+            result.push(json[i]);
+         }
+      }
+   }
+
+   return result;
 }
 
 export type expressionFilter = {

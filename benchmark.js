@@ -1,4 +1,4 @@
-const { filter } = require('./index.js');
+const { filter } = require('./dist/index.js');
 const fs = require('fs');
 
 // Load test data
