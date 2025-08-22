@@ -1,13 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var __1 = require("..");
+var index_1 = require("../dist/index");
 // @ts-ignore
 var fs = require("fs");
 var testDataOrig = JSON.parse(fs.readFileSync('./tests/testData.json', 'utf8'));
 var success = true;
 function test(testData, filterData, checkFunc) {
     var date1 = new Date();
-    var result = (0, __1.filter)(testData, filterData);
+    var result = (0, index_1.filter)(testData, filterData);
     var check = testData.filter(checkFunc);
     var date2 = new Date();
     if (result.length !== check.length)

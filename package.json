@@ -34,7 +34,7 @@
     "typescript": "^5.9.2"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && tsc -p tests",
     "test": "npm run build && node ./tests/tests.js",
     "prepublishOnly": "npm run test",
     "version": "npm run build && git add -A",
